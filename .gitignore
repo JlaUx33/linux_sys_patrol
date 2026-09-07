@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+targets.yaml
+patrol_result.json
+patrol_report.html

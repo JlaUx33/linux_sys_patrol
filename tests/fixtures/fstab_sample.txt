@@ -1,0 +1,12 @@
+#
+# /etc/fstab
+# Created by anaconda
+#
+/dev/mapper/centos-root /                       xfs     defaults        0 0
+UUID=abc-def           /boot                   ext4    defaults        1 2
+/dev/mapper/centos-swap swap                   swap    defaults        0 0
+/dev/sr0               /media/cdrom            iso9660 defaults,noauto 0 0
+# 注释行不应被解析
+server:/export/data    /data                   nfs     defaults,nofail 0 0
+tmpfs                  /dev/shm                tmpfs   defaults        0 0
+/dev/mapper/centos-root /                       xfs     defaults        0 0

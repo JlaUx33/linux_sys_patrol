@@ -1,0 +1,40 @@
+# Linux 主机巡检工具示例配置
+# 用法：复制本文件为 targets.yaml 后按需修改，再执行 python patrol.py --config targets.yaml
+# 未配置的字段使用内置默认值（见 README「配置参考」）
+
+global:
+  # 启用的检查项（按此顺序执行）。可用检查：system cpu memory disk load ports
+  checks:
+    - system
+    - cpu
+    - memory
+    - disk
+    - load
+    - ports
+  timeout: 10               # 每个子进程的超时秒数
+  cpu_sample_interval: 1.0  # CPU 使用率双采样间隔（秒），最小 0.2
+
+hosts:
+  - host: localhost         # 主机显示名（当前版本仅支持本机巡检，单条）
+    cpu:
+      warning: 80           # CPU 使用率阈值 %（0-100，>= 达线）
+      critical: 90
+    memory:
+      warning: 80
+      critical: 90
+    disk:
+      warning: 80
+      critical: 90
+      include_fs: [xfs, ext2, ext3, ext4, nfs]   # 参与检查的文件系统类型（白名单子集）
+    load:
+      warning: auto         # 数字（1 分钟负载绝对值）或 auto（=核心数 / 2×核心数）
+      critical: auto
+    ports:
+      # 需要检查监听状态的端口列表；未监听判 CRIT
+      items:
+        - port: 22
+          name: sshd
+        - port: 80
+          name: nginx
+        # address: 127.0.0.1   # 可选：限定绑定地址（IPv4/IPv6），不填=任意地址
+    system: {}              # 基础信息检查，无阈值
