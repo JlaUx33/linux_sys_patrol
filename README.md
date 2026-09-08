@@ -64,12 +64,15 @@ pip install -r requirements.txt
 离线环境（内网主机）：
 
 ```bash
-# 联网机上提前下载 wheel 包
+# 在联网机上提前下载 wheel 包
 pip download -r requirements.txt -d wheels/
 
 # 将 wheels/ 目录拷贝到目标主机后安装
 pip install --no-index --find-links wheels/ -r requirements.txt
 ```
+
+> 注意：下载包的联网机需与目标主机**同为 Linux**（在 Windows 上执行会下载 Windows 平台包，装不上）。跨平台下载时改用：
+> `pip download -r requirements.txt -d wheels/ --only-binary=:all: --platform manylinux2014_x86_64 --python-version 36`
 
 ## 快速开始
 
@@ -86,6 +89,90 @@ python patrol.py
 #   JSON 结果: patrol_result.json
 #   HTML 报告: patrol_report.html
 ```
+
+## CentOS 7 虚拟机部署实测（从零到报告）
+
+以下为在全新 CentOS 7 虚拟机上从零部署的完整步骤，各步附预期结果。`<VM_IP>` 替换为虚拟机 IP；Windows 侧命令在 Git Bash 中执行。
+
+### 1. 打包并上传项目
+
+```bash
+# Windows（Git Bash）：
+cd /d/vibeCoding/linux_sys_patrol
+tar czf syspatrol.tar.gz --exclude=.git --exclude=__pycache__ \
+  patrol.py syspatrol targets.example.yaml requirements.txt
+scp syspatrol.tar.gz root@<VM_IP>:/root/
+# 预期: 输入 root 密码后显示 100% 传输完成
+```
+
+> 备选：VMware 共享文件夹 / VirtualBox 拖拽，效果相同。
+
+### 2. 安装 Python 3.6 与 pip
+
+```bash
+python3 --version                 # 预期: Python 3.6.8，已有则跳过安装
+yum install -y python3            # 无 python3 时执行
+python3 -m pip --version          # 有 pip 输出则跳到第 3 步
+yum install -y epel-release       # 无 pip 时执行（pip 在 EPEL 源）
+yum install -y python3-pip
+```
+
+### 3. 解压并安装依赖
+
+```bash
+cd /root
+tar xzf syspatrol.tar.gz
+pip3 install -r requirements.txt
+# 预期: Successfully installed PyYAML-6.0.3
+# 网络慢可换国内源: pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple PyYAML
+```
+
+### 4. 准备配置并执行
+
+```bash
+cp targets.example.yaml targets.yaml
+vi targets.yaml                   # 按需修改阈值与待检端口，不改也能直接跑
+python3 patrol.py
+# 预期输出（数字随机器而异）:
+#   巡检完成: 主机=localhost 总体=CRIT (OK 9 / WARN 0 / CRIT 1 / ERROR 0 / UNKNOWN 0)
+#   JSON 结果: patrol_result.json
+#   HTML 报告: patrol_report.html
+echo $?                           # 预期: 2（示例中 80 端口未监听 → CRIT）
+```
+
+说明：端口 22（sshd）默认监听 → OK；80 未装 httpd/nginx 时不监听 → CRIT，正好演示告警。全量耗时约 2-3 秒（CPU 双采样占约 1 秒）。
+
+### 5. 查看结果
+
+```bash
+python3 -m json.tool patrol_result.json | head -40
+# 预期: 结构化 JSON，含 host/overall/summary/results 及各项指标
+
+# Windows（Git Bash）把报告传回浏览器查看:
+scp root@<VM_IP>:/root/patrol_report.html .
+start patrol_report.html
+# 预期: 浏览器显示带配色徽章与统计卡片的报告；断网打开也正常（自包含）
+```
+
+### 6. 验证错误隔离（可选）
+
+```bash
+mv /usr/bin/lscpu /usr/bin/lscpu.bak; python3 patrol.py; mv /usr/bin/lscpu.bak /usr/bin/lscpu
+```
+
+预期：中间一次运行的 `CPU 拓扑信息` 为 ERROR，`CPU 使用率` 及其余检查照常 OK，巡检完整执行不中断。（分号保证 lscpu 一定恢复）
+
+### 常见问题
+
+| 现象 | 解决 |
+|---|---|
+| `python3: command not found` | `yum install -y python3` |
+| `No module named pip` | `yum install -y epel-release && yum install -y python3-pip` |
+| `No module named 'yaml'` | `pip3 install -r requirements.txt` |
+| `错误: 无法读取配置文件` | 确认在 `/root` 下执行，或 `python3 patrol.py -c /root/targets.yaml` |
+| `错误: 配置校验失败` | 按提示逐条修正（错误信息会一次性列出所有问题） |
+| 端口 80 显示 CRIT | 未监听属正常现象；`yum install -y httpd && systemctl start httpd`，或从配置删掉该端口 |
+| 终端中文乱码 | `export LANG=zh_CN.UTF-8`（不影响文件内容，文件本身是 UTF-8） |
 
 ## 配置参考
 
