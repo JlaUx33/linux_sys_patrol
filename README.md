@@ -227,7 +227,7 @@ pytest
 
 ## Demo 截图
 
-> 在 Linux 主机上执行后截图报告替换此处：
+> 在 Linux 主机上执行后截图报告：
 
 ```
 ![报告截图](images/syspatrol_example.png)
