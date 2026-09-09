@@ -230,7 +230,7 @@ pytest
 > 在 Linux 主机上执行后截图报告替换此处：
 
 ```
-<img width="1912" height="912" alt="image" src="https://github.com/user-attachments/assets/d725630d-12a4-413b-a79e-dcf05ce10b8c" />
+<img width="1912" height="912" alt="屏幕截图 2026-09-09 155651" src="https://github.com/user-attachments/assets/fd432495-6f69-4a82-b7e9-74aa10d8c6d0" />
 
 ```
 
