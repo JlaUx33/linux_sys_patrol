@@ -230,7 +230,7 @@ pytest
 > 在 Linux 主机上执行后截图报告：
 
 ```
-![报告截图](https://github.com/JlaUx33/linux_sys_patrol/blob/main/images/syspatrol_example.png)
+![报告截图](https://github.com/JlaUx33/linux_sys_patrol/blob/main/images/syspatrol_example.png?raw=true)
 ```
 
 ## 路线图（LEVEL UP）
